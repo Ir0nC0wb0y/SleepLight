@@ -12,12 +12,6 @@
 #define FASTLED_ESP8266_RAW_PIN_ORDER
 #include <FastLED.h>
 
-  // FastLED Variables
-  #define NUM_LEDS                   20
-  #define LED_PIN                     5  //D1
-  CRGB leds[NUM_LEDS];
-
-
 // NTPClient Setup
 #include <NTP.h>
   // Time Keeping (NTP)
@@ -52,6 +46,19 @@
   WiFiUDP ntpUDP;
   NTP ntp(ntpUDP);
 
+// Loop Vars
+  #include "Common.h"
+  #include "Animations.hpp"
+  #define LOOP_TIME                   250
+  unsigned long next_loop      =        0;
+  int ani_type                 =        1;
+  int ani_pos                  =        0;
+  int ani_dir                  =        1;
+
+// FastLED Variables
+  #define LED_PIN                     5  //D1
+  CRGB leds[NUM_LEDS];
+
 void ChangeLED(int switcheroo) {
   switch (switcheroo) { 
     case 1:
@@ -60,6 +67,7 @@ void ChangeLED(int switcheroo) {
         // Turn our current led on to white, then show the leds
         leds[whiteLed] = CRGB::Green;
       }
+      Serial.println("Changing LEDS to Green");
       break;
     case 2:
       // Blue
@@ -67,6 +75,7 @@ void ChangeLED(int switcheroo) {
         // Turn our current led on to white, then show the leds
         leds[whiteLed] = CRGB::Blue;
       }
+      Serial.println("Changing LEDS to Blue");
       break;
     case 3:
       // Purple
@@ -74,6 +83,7 @@ void ChangeLED(int switcheroo) {
         // Turn our current led on to white, then show the leds
         leds[whiteLed] = CRGB::Purple;
       }
+      Serial.println("Changing LEDS to Purple");
       break;
     case 4:
       // White
@@ -81,6 +91,7 @@ void ChangeLED(int switcheroo) {
         // Turn our current led on to white, then show the leds
         leds[whiteLed] = CRGB::White;
       }
+      Serial.println("Changing LEDS to White");
       break;
 
   }
@@ -93,6 +104,7 @@ void setup() {
   Serial.println("Starting Sleep Light");
 
   // FastLED
+  Serial.println("Setting up LEDS");
   FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);
   FastLED.setBrightness(10);
   ChangeLED(1);
@@ -103,7 +115,9 @@ void setup() {
   Serial.println("connected... yay!");
   ChangeLED(2);
 
+  delay(500);
   // NTP Handling
+  Serial.println("Setting up NTP");
   ntp.updateInterval(900000); // set to update from ntp server every 900 seconds, or 15 minutes
   ntp.ntpServer("north-america.pool.ntp.org");
   ntp.ruleDST("CDT", Second, Sun, Mar, 2, -300);
@@ -113,11 +127,47 @@ void setup() {
 
   delay(500);
   ChangeLED(4);
+  FastLED.setBrightness(50);
+  delay(1000); 
+
+  next_loop = millis() + LOOP_TIME;
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
   ntp.update();
-  Serial.print("Epoch: "); Serial.println(ntp.epoch());
-  delay(10000);
+  if (millis() >= next_loop) {
+    //Serial.print("Ani_type: "); Serial.println(ani_type);
+    switch (ani_type) {
+      case 1:
+        // Rotating
+        Serial.print(ani_pos);
+        RotatingColors(ani_pos);
+        ani_pos = ani_pos + ani_dir;
+        if (ani_pos >= LED_ROT) {
+          ani_pos = 0;
+          ani_dir = 1;
+        } else if (ani_pos < 0) {
+          ani_pos = 0;
+          ani_dir = 1;
+          //ani_type = 2;
+        }
+        Serial.print(" ");Serial.println(ani_pos);
+        break;
+      case 2:
+        // Up-down
+        ElevatingColors(ani_pos);
+        ani_pos = ani_pos + ani_dir;
+        if (ani_pos >= LED_HGT) {
+          ani_pos = LED_HGT-2;
+          ani_dir = -1;
+        } else if (ani_pos < 0) {
+          ani_pos = 0;
+          ani_dir = 1;
+          ani_type = 1;
+        }
+        break;
+    }
+    next_loop = millis() + LOOP_TIME;
+  }
+  delay(1);
 }
