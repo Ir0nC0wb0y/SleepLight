@@ -26,22 +26,6 @@
   //int date_month         =            0;
   //int date_day           =            0;
 
-  // DST Routines
-  bool DST_flag          =            0;
-  bool dst_state         =            1;               // default DST state
-    // DST START
-      // DST starts on the second sunday of March
-      #define DST_START_MONTH           3
-      #define DST_START_DAY             0
-      #define DST_START_SEQ             2
-      #define DST_START_HOUR            2
-    // DST END
-      // DST Ends the first sunday of November
-      #define DST_END_MONTH            11
-      #define DST_END_DAY               0
-      #define DST_END_SEQ               1
-      #define DST_END_HOUR              2
-
   // Create NTP Object
   WiFiUDP ntpUDP;
   NTP ntp(ntpUDP);
@@ -49,53 +33,82 @@
 // Loop Vars
   #include "Common.h"
   #include "Animations.hpp"
-  #define LOOP_TIME                   250
+  Animations ani;
+  #define LOOP_TIME                  1000
   unsigned long next_loop      =        0;
-  int ani_type                 =        1;
-  int ani_pos                  =        0;
-  int ani_dir                  =        1;
+  
+// Schedule Vars
+  // these schedules assume only the start
+  int sched_wake[7][3]         =  { // {hour, min, sec}
+                                  { 8, 0, 0},
+                                  { 7, 0, 0},
+                                  { 7, 0, 0},
+                                  { 7, 0, 0},
+                                  { 7, 0, 0},
+                                  { 7, 0, 0},
+                                  { 7, 0, 0}};
+  int sched_sleep[7][3]        =  { // {hour, min, sec}
+                                  {20, 0, 0},
+                                  {20, 0, 0},
+                                  {20, 0, 0},
+                                  {20, 0, 0},
+                                  {20, 0, 0},
+                                  {20, 0, 0},
+                                  {20, 0, 0}};
+  int sched_fun[7][3]          =  { // {hour, min, sec}
+                                  { 8, 0, 0},
+                                  { 8, 0, 0},
+                                  { 8, 0, 0},
+                                  { 8, 0, 0},
+                                  { 8, 0, 0},
+                                  { 8, 0, 0},
+                                  { 8, 0, 0}};
+  int sched_state              =        0; // states: 0 - sleep, 1 - wake, 3 - fun
 
 // FastLED Variables
   #define LED_PIN                     5  //D1
   CRGB leds[NUM_LEDS];
 
-void ChangeLED(int switcheroo) {
-  switch (switcheroo) { 
-    case 1:
-      // Green
-      for(int whiteLed = 0; whiteLed < NUM_LEDS; whiteLed++) {
-        // Turn our current led on to white, then show the leds
-        leds[whiteLed] = CRGB::Green;
-      }
-      Serial.println("Changing LEDS to Green");
+void handle_state() {
+  switch (sched_state) {
+    case 0: //sleep
+      ani.ChangeLED(4);
       break;
-    case 2:
-      // Blue
-      for(int whiteLed = 0; whiteLed < NUM_LEDS; whiteLed++) {
-        // Turn our current led on to white, then show the leds
-        leds[whiteLed] = CRGB::Blue;
-      }
-      Serial.println("Changing LEDS to Blue");
+    case 1: // wake
+      ani.ChangeLED(1);
       break;
-    case 3:
-      // Purple
-      for(int whiteLed = 0; whiteLed < NUM_LEDS; whiteLed++) {
-        // Turn our current led on to white, then show the leds
-        leds[whiteLed] = CRGB::Purple;
-      }
-      Serial.println("Changing LEDS to Purple");
-      break;
-    case 4:
-      // White
-      for(int whiteLed = 0; whiteLed < NUM_LEDS; whiteLed++) {
-        // Turn our current led on to white, then show the leds
-        leds[whiteLed] = CRGB::White;
-      }
-      Serial.println("Changing LEDS to White");
-      break;
-
+    case 2: // fun
+      ani.ChangeLED(3);
+    break;
   }
-   FastLED.show();
+}
+
+void handle_sched() {
+  int weekday = ntp.weekDay();
+  // Set Sleep State (0)
+  if (sched_state != 0) {
+    if (ntp.hours() >= sched_sleep[weekday][1] && ntp.minutes() >= sched_sleep[weekday][2] && ntp.seconds() >= sched_sleep[weekday][3]) {
+      Serial.println("Setting sleep mode");
+      sched_state = 0;
+    }
+  }
+  // Set Wake State (1)
+  if (sched_state != 1) {
+    if (ntp.hours() >= sched_wake[weekday][1] && ntp.minutes() >= sched_wake[weekday][2] && ntp.seconds() >= sched_wake[weekday][3]) {
+      Serial.println("setting wake mode");
+      sched_state = 1;
+    }
+  }
+  // Set Fun State (2)
+  if (sched_state != 2) {
+    if (ntp.hours() >= sched_fun[weekday][1] && ntp.minutes() >= sched_fun[weekday][2] && ntp.seconds() >= sched_fun[weekday][3]) {
+      Serial.println("setting fun mode");
+      sched_state = 2;
+    }
+  }
+
+
+  handle_state();
 }
 
 void setup() {
@@ -107,15 +120,14 @@ void setup() {
   Serial.println("Setting up LEDS");
   FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);
   FastLED.setBrightness(10);
-  ChangeLED(1);
+  ani.ChangeLED(1);
 
   // WiFiManager
   WiFiManager wifiManager;
   wifiManager.autoConnect("SleepLight");
   Serial.println("connected... yay!");
-  ChangeLED(2);
+  ani.ChangeLED(2);
 
-  delay(500);
   // NTP Handling
   Serial.println("Setting up NTP");
   ntp.updateInterval(900000); // set to update from ntp server every 900 seconds, or 15 minutes
@@ -123,50 +135,20 @@ void setup() {
   ntp.ruleDST("CDT", Second, Sun, Mar, 2, -300);
   ntp.ruleSTD("CST",  First, Sun, Nov, 3, -360);
   ntp.begin();
-  ChangeLED(3);
 
-  delay(500);
-  ChangeLED(4);
+
+  ani.ChangeLED(3);
   FastLED.setBrightness(50);
-  delay(1000); 
+  delay(1000);
 
   next_loop = millis() + LOOP_TIME;
 }
 
 void loop() {
-  ntp.update();
   if (millis() >= next_loop) {
-    //Serial.print("Ani_type: "); Serial.println(ani_type);
-    switch (ani_type) {
-      case 1:
-        // Rotating
-        Serial.print(ani_pos);
-        RotatingColors(ani_pos);
-        ani_pos = ani_pos + ani_dir;
-        if (ani_pos >= LED_ROT) {
-          ani_pos = 0;
-          ani_dir = 1;
-        } else if (ani_pos < 0) {
-          ani_pos = 0;
-          ani_dir = 1;
-          //ani_type = 2;
-        }
-        Serial.print(" ");Serial.println(ani_pos);
-        break;
-      case 2:
-        // Up-down
-        ElevatingColors(ani_pos);
-        ani_pos = ani_pos + ani_dir;
-        if (ani_pos >= LED_HGT) {
-          ani_pos = LED_HGT-2;
-          ani_dir = -1;
-        } else if (ani_pos < 0) {
-          ani_pos = 0;
-          ani_dir = 1;
-          ani_type = 1;
-        }
-        break;
-    }
+    ntp.update();
+    handle_sched();
+    Serial.println(ntp.formattedTime("%I:%M:%S"));
     next_loop = millis() + LOOP_TIME;
   }
   delay(1);
