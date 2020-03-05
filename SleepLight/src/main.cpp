@@ -77,15 +77,15 @@ void handle_state() {
   switch (sched_state) {
     case 0: //sleep
       Serial.println("Setting sleep mode");
-      ani.ChangeLED(4);
+      ani.set_ChangeLED(4);
       break;
     case 1: // wake
       Serial.println("setting wake mode");
-      ani.ChangeLED(1);
+      ani.set_ChangeLED(1);
       break;
     case 2: // fun
       Serial.println("setting fun mode");
-      ani.RandomColors();
+      ani.set_RandomColors();
     break;
   }
 }
@@ -137,13 +137,13 @@ void setup() {
   Serial.println("Setting up LEDS");
   FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);
   FastLED.setBrightness(10);
-  ani.ChangeLED(1);
+  ani.set_ChangeLED(1);
 
   // WiFiManager
   WiFiManager wifiManager;
   wifiManager.autoConnect("SleepLight");
   Serial.println("connected... yay!");
-  ani.ChangeLED(2);
+  ani.set_ChangeLED(2);
 
   // NTP Handling
   Serial.println("Setting up NTP");
@@ -154,7 +154,7 @@ void setup() {
   ntp.begin();
 
 
-  ani.ChangeLED(3);
+  ani.set_ChangeLED(3);
   FastLED.setBrightness(20);
   delay(1000);
 
@@ -176,7 +176,7 @@ void loop() {
   }
   if (millis() >= wifi_loop) {
     if (WiFi.status() != WL_CONNECTED) {
-      ani.Siren();
+      ani.set_Siren();
     }
   }
   delay(1);

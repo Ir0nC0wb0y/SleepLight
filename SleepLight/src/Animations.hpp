@@ -9,15 +9,15 @@ class Animations {
 
         // Use this for ongoing animation effects
         void HandleDisplay();
+        
+        void set_ChangeLED(int switcheroo);                // 1
+        void set_RotatingColors();                         // 2
+        void set_ElevatingColors();                        // 3
+        void set_FadingColors();                           // 4
+        void set_RandomColors();                           // 5
+        void set_LavaLamp();                               // 6
+        void set_Siren();                                  // 7
 
-                                                           // Ani_style:
-        void ChangeLED(int switcheroo);                    // 1
-        void RotatingColors();                             // 2
-        void ElevatingColors();                            // 3
-        void FadingColors();                               // 4
-        void RandomColors();                               // 5
-        void LavaLamp();                                   // 6
-        void Siren();                                      // 7
         unsigned long ani_refresh    =        0;
 
     private:
@@ -36,5 +36,13 @@ class Animations {
                                          {  0,  0,255},   // 4 blue
                                          {128,  0,128}};  // 5 purple
         int lava_lamp_on[3]          =  {-1,-1,-1};
-        
+
+                                                           // Ani_style:
+        void ChangeLED();                                  // 1
+        void RotatingColors();                             // 2
+        void ElevatingColors();                            // 3
+        void FadingColors();                               // 4
+        void RandomColors();                               // 5
+        void LavaLamp();                                   // 6
+        void Siren();                                      // 7
 };

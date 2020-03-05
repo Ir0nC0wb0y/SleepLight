@@ -11,11 +11,11 @@ void Animations::HandleDisplay() {
     case 1:
       // Breathe brightness levels 20 to 50
       ani_pos = ani_dir + ani_pos;
-      if (ani_pos > 50) {
-        ani_pos = 50;
+      if (ani_pos > BREATHE_MAX) {
+        ani_pos = BREATHE_MAX;
         ani_dir = -1;
-      } else if (ani_pos < 20) {
-        ani_pos = 20;
+      } else if (ani_pos < BREATHE_MIN) {
+        ani_pos = BREATHE_MIN;
         ani_dir = 1;
       }
       FastLED.setBrightness(ani_pos);
@@ -46,10 +46,75 @@ void Animations::HandleDisplay() {
   }
 }
 
-void Animations::ChangeLED(int switcheroo) {
-  ani_style = 1;
-  ani_refresh = BREATHE_DUR/(BREATHE_MAX - BREATHE_MIN + 1);
-  switch (switcheroo) { 
+void Animations::set_ChangeLED(int switcheroo) {
+  if (ani_style != 7) {
+    ani_style = 1;
+    ani_refresh = BREATHE_DUR / (BREATHE_MAX - BREATHE_MIN + 1);
+    ani_pos = switcheroo;
+    ani_dir = 0;
+    ChangeLED();
+  }
+}
+
+void Animations::set_RotatingColors() {
+  if (ani_style != 7) {
+    ani_style = 2;
+    ani_refresh = 1000/4;
+    ani_pos = 0;
+    ani_dir = 0;
+    RotatingColors();
+  }
+}
+
+void Animations::set_ElevatingColors() {
+  if (ani_style != 7) {
+    ani_style = 3;
+    ani_refresh = 1000/5;
+    ani_pos = 0;
+    ani_dir = 0;
+    ElevatingColors();
+  }
+}
+
+void Animations::set_FadingColors() {
+  //if (ani_style != 7) {
+    //ani_style = 4;
+    //ani_refresh = 1000/20;
+    //ani_pos = 0;
+    //ani_dir = 0;
+    //FadingColors();
+  //}
+}
+
+void Animations::set_RandomColors() {
+  if (ani_style != 7) {
+    ani_style = 5;
+    ani_pos = 0;
+    ani_dir = 0;
+    RandomColors();
+  }
+}
+
+void Animations::set_LavaLamp() {
+  //if (ani_style != 7) {
+    //ani_style = 6;
+    //ani_refresh = 1000/2;
+    //ani_pos = 0;
+    //ani_dir = 0;
+    //LavaLamp();
+  //}
+}
+
+void Animations::set_Siren() {
+  ani_style = 7;
+  ani_refresh = 1000/10;
+  ani_pos = 0;
+  ani_dir = 0;
+  Siren();
+}
+
+void Animations::ChangeLED() {
+  switch (ani_pos) { 
     case 1:
       // Green
       for(int whiteLed = 0; whiteLed < NUM_LEDS; whiteLed++) {
@@ -88,8 +153,6 @@ void Animations::ChangeLED(int switcheroo) {
 }
 
 void Animations::RotatingColors() {
-  ani_style = 2;
-  ani_refresh = 1000/4;
   ani_pos++;
   if (ani_pos >= LED_ROT) {
     ani_pos = 0;
@@ -105,8 +168,6 @@ void Animations::RotatingColors() {
 }
 
 void Animations::ElevatingColors() {
-  ani_style = 3;
-  ani_refresh = 1000/5;
     for (int idex = 0; idex < NUM_LEDS; idex++) {
         if (idex % LED_ROT == ani_pos) {
             leds[idex] = CRGB::Chartreuse;
@@ -118,13 +179,10 @@ void Animations::ElevatingColors() {
 }
 
 void Animations::FadingColors() {
-  ani_style = 4;
-  ani_refresh = 1000/20;
 
 }
 
 void Animations::RandomColors() {
-  ani_style = 5;
   ani_refresh = random(1000,5001);
   for (int icol = 0; icol < LED_ROT; icol++) {
     int color_index = micros() % 6;
@@ -137,8 +195,6 @@ void Animations::RandomColors() {
 
 /*
 void LavaLamp() {
-  ani_style = 6;
-  ani_refresh = 1000/2;
   if (lava_lamp_on[0] == -1 && lava_lamp_on[1] == -1 && lava_lamp_on[2] == -1) {
     // Set lava lamp pixels
     for (int idex = 0; idex < random(0,3); idex++) {
@@ -150,8 +206,6 @@ void LavaLamp() {
 */
 
 void Animations::Siren() {
-  ani_style = 7;
-  ani_refresh = 1000/10;
   ani_pos++;
   if (ani_pos >= LED_ROT) {
     ani_pos = 0;
