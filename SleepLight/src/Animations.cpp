@@ -1,5 +1,9 @@
 #include "Animations.hpp"
 
+#define BREATHE_DUR   20000
+#define BREATHE_MIN      10
+#define BREATHE_MAX      30
+
 void Animations::HandleDisplay() {
   switch (ani_style) {
     case 1:
@@ -39,7 +43,7 @@ void Animations::HandleDisplay() {
 
 void Animations::ChangeLED(int switcheroo) {
   ani_style = 1;
-  ani_refresh = 1000/10;
+  ani_refresh = BREATHE_DUR/(BREATHE_MAX - BREATHE_MIN + 1);
   switch (switcheroo) { 
     case 1:
       // Green
@@ -116,9 +120,9 @@ void Animations::FadingColors() {
 
 void Animations::RandomColors() {
   ani_style = 5;
-  ani_refresh = 1000/5;
+  ani_refresh = random(1000,5001);
   for (int icol = 0; icol < LED_ROT; icol++) {
-    int color_index = random(0,5);
+    int color_index = micros() % 6;
     for (int irow = 0; irow < LED_HGT; irow++) {
       leds[LED_location[irow][icol]] = CRGB(color_rgb[color_index][1],color_rgb[color_index][2],color_rgb[color_index][3]);
     }
