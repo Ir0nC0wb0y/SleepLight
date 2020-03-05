@@ -38,6 +38,8 @@
   #define LOOP_TIME                   250
   unsigned long next_loop      =        0;
   unsigned long ani_loop       =        0;
+  #define WIFI_CHECK_TIME          900000    //Check WiFi state every 15 min
+  unsigned long wifi_loop      =        0;
   
 // Schedule Vars
   // these schedules assume only the start
@@ -158,6 +160,7 @@ void setup() {
 
   next_loop = millis() + LOOP_TIME;
   ani_loop = millis();
+  wifi_loop = millis() + WIFI_CHECK_TIME;
 }
 
 void loop() {
@@ -170,6 +173,11 @@ void loop() {
   if (millis() >= ani_loop) {
     ani.HandleDisplay();
     ani_loop = millis() + ani.ani_refresh;
+  }
+  if (millis() >= wifi_loop) {
+    if (WiFi.status() != WL_CONNECTED) {
+      ani.Siren();
+    }
   }
   delay(1);
 }

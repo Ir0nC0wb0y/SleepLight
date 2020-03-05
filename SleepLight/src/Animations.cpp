@@ -4,6 +4,8 @@
 #define BREATHE_MIN      10
 #define BREATHE_MAX      30
 
+
+// Used for maintaining Animation in display
 void Animations::HandleDisplay() {
   switch (ani_style) {
     case 1:
@@ -35,6 +37,9 @@ void Animations::HandleDisplay() {
     case 6:
       ani_style = 0;
       //LavaLamp();
+      break;
+    case 7:
+      Siren();
       break;
     default:
       break;
@@ -143,3 +148,43 @@ void LavaLamp() {
   }
 }
 */
+
+void Animations::Siren() {
+  ani_style = 7;
+  ani_refresh = 1000/10;
+  ani_pos++;
+  if (ani_pos >= LED_ROT) {
+    ani_pos = 0;
+  }
+  bool siren_color[4] = {0,0,0,0};
+  switch (ani_pos) {
+    case 0:
+      siren_color[0] = 1;
+      siren_color[1] = 1;
+      break;
+    case 1:
+      siren_color[1] = 1;
+      siren_color[2] = 1;
+      break;
+    case 2:
+      siren_color[3] = 1;
+      siren_color[4] = 1;
+      break;
+    case 3:
+      siren_color[1] = 1;
+      siren_color[4] = 1;
+      break;
+  }
+    for (int icol = 0; icol < LED_ROT; icol++) {
+      int color_index = -1;
+      if (siren_color[icol]) {
+        color_index = 0;
+      } else {
+        color_index = 4;
+      }
+      for (int irow = 0; irow < LED_HGT; irow++) {
+        leds[LED_location[irow][icol]] = CRGB(color_rgb[color_index][1],color_rgb[color_index][2],color_rgb[color_index][3]);
+      }
+    }
+    FastLED.show();
+}

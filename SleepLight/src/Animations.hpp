@@ -17,6 +17,7 @@ class Animations {
         void FadingColors();                               // 4
         void RandomColors();                               // 5
         void LavaLamp();                                   // 6
+        void Siren();                                      // 7
         unsigned long ani_refresh    =        0;
 
     private:
@@ -28,12 +29,12 @@ class Animations {
                                         {2,7,12,17},
                                         {1,8,11,18},
                                         {0,9,10,19}};
-        int color_rgb[6][3]           = {{255,  0,  0},
-                                         {255,165,  0},
-                                         {255,255,  0},
-                                         {  0,255,  0},
-                                         {  0,  0,255},
-                                         {128,  0,128}};
+        int color_rgb[6][3]           = {{255,  0,  0},   // 0 red
+                                         {255,165,  0},   // 1 orange
+                                         {255,255,  0},   // 2 yellow
+                                         {  0,255,  0},   // 3 green
+                                         {  0,  0,255},   // 4 blue
+                                         {128,  0,128}};  // 5 purple
         int lava_lamp_on[3]          =  {-1,-1,-1};
         
 };
