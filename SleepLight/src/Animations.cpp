@@ -107,7 +107,7 @@ void Animations::set_LavaLamp() {
 
 void Animations::set_Siren() {
   ani_style = 7;
-  ani_refresh = 1000/10;
+  ani_refresh = 1000/3;
   ani_pos = 0;
   ani_dir = 0;
   Siren();
@@ -221,14 +221,15 @@ void Animations::Siren() {
       siren_color[2] = 1;
       break;
     case 2:
+      siren_color[2] = 1;
       siren_color[3] = 1;
-      siren_color[4] = 1;
       break;
     case 3:
-      siren_color[1] = 1;
-      siren_color[4] = 1;
+      siren_color[3] = 1;
+      siren_color[0] = 1;
       break;
   }
+  FastLED.clear();
     for (int icol = 0; icol < LED_ROT; icol++) {
       int color_index = -1;
       if (siren_color[icol]) {
@@ -237,7 +238,7 @@ void Animations::Siren() {
         color_index = 4;
       }
       for (int irow = 0; irow < LED_HGT; irow++) {
-        leds[LED_location[irow][icol]] = CRGB(color_rgb[color_index][1],color_rgb[color_index][2],color_rgb[color_index][3]);
+        leds[LED_location[irow][icol]] = CRGB(color_rgb[color_index][0],color_rgb[color_index][1],color_rgb[color_index][2]);
       }
     }
     FastLED.show();
