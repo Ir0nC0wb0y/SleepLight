@@ -80,7 +80,8 @@ void handle_state() {
       break;
     case 2: // fun
       Serial.println("setting fun mode");
-      ani.set_RandomColors();
+      //ani.set_RandomColors();
+      ani.set_LavaLamp();
     break;
   }
 }

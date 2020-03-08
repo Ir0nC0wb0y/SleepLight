@@ -35,7 +35,18 @@ class Animations {
                                          {  0,255,  0},   // 3 green
                                          {  0,  0,255},   // 4 blue
                                          {128,  0,128}};  // 5 purple
-        int lava_lamp_on[3]          =  {-1,-1,-1};
+        
+        // Lava Lamp variables
+        int ll_locations[3]           =  {-1, -1, -1};
+        int ll_indexes[3][2]          =  {{-1,-1},        // ll_on 0
+                                          {-1,-1},        // ll_on 1
+                                          {-1,-1}};       // ll_on 2
+        int ll_on                     =       0;
+        void LL_reset();                                  // resets location of ll pixels
+        void LL_move();
+        void LL_add();
+        void LL_set();
+        void LL_show();
 
                                                            // Ani_style:
         void ChangeLED();                                  // 1
