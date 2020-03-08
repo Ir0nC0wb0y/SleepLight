@@ -20,12 +20,7 @@
   long utcOffsetInSeconds      = -21600;          // for local CST
   #define NTP_UPDATE_INT         900000           // update interval for internal time to NTP servers
   //char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
-  //int time_hour_raw      =            0;
-  //int time_hour          =            0;
-  //int time_minute        =            0;
   int time_second        =            0;
-  //int date_month         =            0;
-  //int date_day           =            0;
 
   // Create NTP Object
   WiFiUDP ntpUDP;
