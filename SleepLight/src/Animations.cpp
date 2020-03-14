@@ -1,15 +1,15 @@
 #include "Animations.hpp"
 
 #define BREATHE_DUR   20000
-#define BREATHE_MIN      10
-#define BREATHE_MAX      30
+#define BREATHE_MIN       5
+#define BREATHE_MAX      55
 
 
 // Used for maintaining Animation in display
 void Animations::HandleDisplay() {
   switch (ani_style) {
     case 1:
-      // Breathe brightness levels 20 to 50
+      // Breathe between Min and Max brightness levels
       ani_pos = ani_dir + ani_pos;
       if (ani_pos > BREATHE_MAX) {
         ani_pos = BREATHE_MAX;
@@ -113,7 +113,7 @@ void Animations::set_Siren() {
 }
 
 void Animations::ChangeLED() {
-  switch (ani_pos) { 
+  /*switch (ani_pos) { 
     case 1:
       // Green
       for(int whiteLed = 0; whiteLed < NUM_LEDS; whiteLed++) {
@@ -148,6 +148,11 @@ void Animations::ChangeLED() {
       break;
 
   }
+  */
+  for(int whiteLed = 0; whiteLed < NUM_LEDS; whiteLed++) {
+        // Turn our current led on to white, then show the leds
+        leds[whiteLed] = CRGB(color_rgb[ani_pos][0],color_rgb[ani_pos][1],color_rgb[ani_pos][2]);
+      }
    FastLED.show();
 }
 
@@ -183,12 +188,15 @@ void Animations::FadingColors() {
 
 void Animations::RandomColors() {
   ani_refresh = random(1000,5001);
+  Serial.print("Colors:");
   for (int icol = 0; icol < LED_ROT; icol++) {
     int color_index = micros() % 6;
     for (int irow = 0; irow < LED_HGT; irow++) {
       leds[LED_location[irow][icol]] = CRGB(color_rgb[color_index][1],color_rgb[color_index][2],color_rgb[color_index][3]);
     }
+    Serial.print(" "); Serial.print(icol); Serial.print(","); Serial.print(color_index);
   }
+  Serial.println();
   FastLED.show();
 }
 

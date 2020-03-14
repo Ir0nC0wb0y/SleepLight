@@ -29,12 +29,13 @@ class Animations {
                                         {2,7,12,17},
                                         {1,8,11,18},
                                         {0,9,10,19}};
-        int color_rgb[6][3]           = {{255,  0,  0},   // 0 red
+        int color_rgb[7][3]           = {{255,  0,  0},   // 0 red
                                          {255,165,  0},   // 1 orange
                                          {255,255,  0},   // 2 yellow
                                          {  0,255,  0},   // 3 green
                                          {  0,  0,255},   // 4 blue
-                                         {128,  0,128}};  // 5 purple
+                                         {128,  0,128},   // 5 purple
+                                         {255,255,255}};  // 6 White
         
         // Lava Lamp variables
         int ll_locations[3]           =  {-1, -1, -1};

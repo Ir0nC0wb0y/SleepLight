@@ -2,11 +2,15 @@
 
 // Library Dependencies
 #include <ESP8266WiFi.h>                           // Needed for WiFi
+#include <ESP8266mDNS.h>                           // Needed for OTA
 #include <ESP8266WebServer.h>                      // For WiFiManager
-#include <WiFiUdp.h>                               // Needed for NTP
+#include <WiFiUdp.h>                               // Needed for NTP, OTA
 
 // WifiManager Setup
 #include <WiFiManager.h>
+
+// ArduinoOTA
+#include <ArduinoOTA.h>
 
 // FastLED Setup
 #define FASTLED_INTERRUPT_RETRY_COUNT 0
@@ -39,13 +43,13 @@
 // Schedule Vars
   // these schedules assume only the start
   int sched_wake[7][3]         =  { // {hour, min, sec}
-                                  { 8, 0, 0},
+                                  { 7,30, 0},
                                   { 7, 0, 0},
                                   { 7, 0, 0},
                                   { 7, 0, 0},
                                   { 7, 0, 0},
                                   { 7, 0, 0},
-                                  { 7, 0, 0}};
+                                  { 7,30, 0}};
   int sched_sleep[7][3]        =  { // {hour, min, sec}
                                   {20, 0, 0},
                                   {20, 0, 0},
@@ -65,23 +69,23 @@
   int sched_state              =       -1; // states: 0 - sleep, 1 - wake, 3 - fun
 
 // FastLED Variables
-  #define LED_PIN                     5  //D1
+  #define LED_PIN                       5  //D1
   CRGB leds[NUM_LEDS];
 
 void handle_state() {
   switch (sched_state) {
     case 0: //sleep
       Serial.println("Setting sleep mode");
-      ani.set_ChangeLED(4);
+      ani.set_ChangeLED(6); // white
       break;
     case 1: // wake
       Serial.println("setting wake mode");
-      ani.set_ChangeLED(1);
+      ani.set_ChangeLED(3); // green
       break;
     case 2: // fun
       Serial.println("setting fun mode");
-      //ani.set_RandomColors();
-      ani.set_LavaLamp();
+      ani.set_RandomColors();
+      //ani.set_LavaLamp();
     break;
   }
 }
@@ -93,7 +97,7 @@ void handle_sched() {
   int time_sc = ntp.seconds();
   int state_prior = sched_state;
   if (time_sc != time_second) {
-    Serial.print("Day: "); Serial.print(weekday); Serial.print(", hour: "); Serial.print(time_hr); Serial.print(", minute: "); Serial.print(time_mn); Serial.print(", seconds: "); Serial.println(time_sc);
+    Serial.print("Day: "); Serial.print(weekday); Serial.print(", "); Serial.print(time_hr); Serial.print(":"); Serial.print(time_mn); Serial.print(":"); Serial.println(time_sc);
     time_second = time_sc;
   }
 
@@ -117,11 +121,51 @@ void handle_sched() {
         Serial.print("Wake hour:     "); Serial.print(sched_wake[weekday][0]); Serial.print(", minute: "); Serial.print(sched_wake[weekday][1]); Serial.print(", seconds: "); Serial.println(sched_wake[weekday][2]);
         break;
       case 2:
-        Serial.print("Wake hour:     "); Serial.print(sched_fun[weekday][0]); Serial.print(", minute: "); Serial.print(sched_fun[weekday][1]); Serial.print(", seconds: "); Serial.println(sched_fun[weekday][2]);
+        Serial.print("Fun  hour:     "); Serial.print(sched_fun[weekday][0]); Serial.print(", minute: "); Serial.print(sched_fun[weekday][1]); Serial.print(", seconds: "); Serial.println(sched_fun[weekday][2]);
         break;
     }
     handle_state();
   }
+}
+
+void handleOTA_setup() {
+  ArduinoOTA.onStart([]() {
+    String type;
+    if (ArduinoOTA.getCommand() == U_FLASH) {
+      type = "sketch";
+    } else { // U_FS
+      type = "filesystem";
+    }
+
+    // NOTE: if updating FS this would be the place to unmount FS using FS.end()
+    //if (strcmp(type,U_SPIFFS) == 0) {
+    //  FS.end();
+    //}
+
+    Serial.println("Start updating " + type);
+  });
+  ArduinoOTA.onEnd([]() {
+    Serial.println("\nEnd");
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) {
+      Serial.println("Auth Failed");
+    } else if (error == OTA_BEGIN_ERROR) {
+      Serial.println("Begin Failed");
+    } else if (error == OTA_CONNECT_ERROR) {
+      Serial.println("Connect Failed");
+    } else if (error == OTA_RECEIVE_ERROR) {
+      Serial.println("Receive Failed");
+    } else if (error == OTA_END_ERROR) {
+      Serial.println("End Failed");
+    }
+  });
+  ArduinoOTA.begin();
+  Serial.println("Arduino OTA Ready");
 }
 
 void setup() {
@@ -141,6 +185,18 @@ void setup() {
   Serial.println("connected... yay!");
   ani.set_ChangeLED(2);
 
+  // Arduino OTA
+  // Port defaults to 8266
+  // ArduinoOTA.setPort(8266);
+
+  // Hostname defaults to esp8266-[ChipID]
+  ArduinoOTA.setHostname("SleepLight");
+
+  // No authentication by default
+  ArduinoOTA.setPassword("SleepLight");
+  
+  handleOTA_setup();
+
   // NTP Handling
   Serial.println("Setting up NTP");
   ntp.updateInterval(900000); // set to update from ntp server every 900 seconds, or 15 minutes
@@ -154,26 +210,33 @@ void setup() {
   FastLED.setBrightness(20);
   delay(1000);
 
+  if (sched_state == -1) {
+    handle_sched();
+  }
   next_loop = millis() + LOOP_TIME;
   ani_loop = millis();
   wifi_loop = millis() + WIFI_CHECK_TIME;
 }
 
 void loop() {
+  ArduinoOTA.handle();
+
   if (millis() >= next_loop) {
     ntp.update();
     handle_sched();
     //Serial.println(ntp.formattedTime("%I:%M:%S"));
     next_loop = millis() + LOOP_TIME;
   }
+
   if (millis() >= ani_loop) {
     ani.HandleDisplay();
     ani_loop = millis() + ani.ani_refresh;
   }
+
   if (millis() >= wifi_loop) {
     if (WiFi.status() != WL_CONNECTED) {
       ani.set_Siren();
     }
   }
-  delay(1);
+  //delay(1);
 }
