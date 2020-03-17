@@ -11,6 +11,8 @@
 
 // ArduinoOTA
 #include <ArduinoOTA.h>
+#define OTA_HOSTNAME          "XXXXXXXX"
+#define OTA_PASSWORD          "XXXXXXXX"
 
 // FastLED Setup
 #define FASTLED_INTERRUPT_RETRY_COUNT 0
@@ -190,10 +192,10 @@ void setup() {
   // ArduinoOTA.setPort(8266);
 
   // Hostname defaults to esp8266-[ChipID]
-  ArduinoOTA.setHostname("SleepLight");
+  ArduinoOTA.setHostname(OTA_HOSTNAME);
 
   // No authentication by default
-  ArduinoOTA.setPassword("SleepLight");
+  ArduinoOTA.setPassword(OTA_PASSWORD);
   
   handleOTA_setup();
 
