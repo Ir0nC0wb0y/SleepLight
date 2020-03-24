@@ -21,6 +21,7 @@ class Animations {
         unsigned long ani_refresh    =        0;
 
     private:
+        unsigned long ani_time       =        0;
         int ani_style                =        0;
         int ani_pos                  =        0;
         int ani_dir                  =        1;

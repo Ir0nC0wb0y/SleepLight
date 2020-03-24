@@ -1,23 +1,22 @@
 #include "Animations.hpp"
 
-#define BREATHE_DUR   20000
-#define BREATHE_MIN       5
-#define BREATHE_MAX      55
+#define BREATHE_DUR   10000
+#define BREATHE_MIN      20
+#define BREATHE_MAX      40
+
+int breath_amp = (BREATHE_MAX - BREATHE_MIN) / 2;
+double breath_per = 2 * PI / BREATHE_DUR;
+int breath_off = BREATHE_MIN + breath_amp;
 
 
 // Used for maintaining Animation in display
 void Animations::HandleDisplay() {
+  int breath_time = millis() - ani_time;
   switch (ani_style) {
     case 1:
-      // Breathe between Min and Max brightness levels
-      ani_pos = ani_dir + ani_pos;
-      if (ani_pos > BREATHE_MAX) {
-        ani_pos = BREATHE_MAX;
-        ani_dir = -1;
-      } else if (ani_pos < BREATHE_MIN) {
-        ani_pos = BREATHE_MIN;
-        ani_dir = 1;
-      }
+      //Serial.print("Cur_time: "); Serial.print(breath_time);
+      ani_pos = round((double)breath_amp * sin(breath_per * (double)breath_time) + (double)breath_off);
+      //Serial.print(", brightness: "); Serial.println(ani_pos);
       FastLED.setBrightness(ani_pos);
       FastLED.show();
       break;
@@ -47,10 +46,11 @@ void Animations::HandleDisplay() {
 
 void Animations::set_ChangeLED(int switcheroo) {
   if (ani_style != 7) {
-    ani_style = 1;
-    ani_refresh = BREATHE_DUR / (BREATHE_MAX - BREATHE_MIN + 1);
-    ani_pos = switcheroo;
-    ani_dir = 0;
+    ani_time    = millis();
+    ani_style   = 1;
+    ani_refresh = 1000/20;
+    ani_pos     = switcheroo;
+    ani_dir     = 0;
     ChangeLED();
   }
 }
@@ -90,6 +90,7 @@ void Animations::set_RandomColors() {
     ani_style = 5;
     ani_pos = 0;
     ani_dir = 0;
+    FastLED.setBrightness(100);
     RandomColors();
   }
 }

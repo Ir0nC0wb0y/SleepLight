@@ -11,8 +11,8 @@
 
 // ArduinoOTA
 #include <ArduinoOTA.h>
-#define OTA_HOSTNAME          "XXXXXXXX"
-#define OTA_PASSWORD          "XXXXXXXX"
+#define OTA_HOSTNAME          "SleepLight"
+#define OTA_PASSWORD          "SleepLight"
 
 // FastLED Setup
 #define FASTLED_INTERRUPT_RETRY_COUNT 0
@@ -46,11 +46,11 @@
   // these schedules assume only the start
   int sched_wake[7][3]         =  { // {hour, min, sec}
                                   { 7,30, 0},
-                                  { 7, 0, 0},
-                                  { 7, 0, 0},
-                                  { 7, 0, 0},
-                                  { 7, 0, 0},
-                                  { 7, 0, 0},
+                                  { 7,30, 0},
+                                  { 7,30, 0},
+                                  { 7,30, 0},
+                                  { 7,30, 0},
+                                  { 7,30, 0},
                                   { 7,30, 0}};
   int sched_sleep[7][3]        =  { // {hour, min, sec}
                                   {20, 0, 0},
@@ -179,13 +179,13 @@ void setup() {
   Serial.println("Setting up LEDS");
   FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);
   FastLED.setBrightness(10);
-  ani.set_ChangeLED(1);
+  ani.set_ChangeLED(4); // Blue
 
   // WiFiManager
   WiFiManager wifiManager;
   wifiManager.autoConnect("SleepLight");
   Serial.println("connected... yay!");
-  ani.set_ChangeLED(2);
+  ani.set_ChangeLED(5); // Purple
 
   // Arduino OTA
   // Port defaults to 8266
@@ -208,7 +208,7 @@ void setup() {
   ntp.begin();
 
 
-  ani.set_ChangeLED(3);
+  ani.set_ChangeLED(6); // White
   FastLED.setBrightness(20);
   delay(1000);
 
