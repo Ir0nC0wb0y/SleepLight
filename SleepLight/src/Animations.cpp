@@ -1,5 +1,6 @@
 #include "Animations.hpp"
 
+// Constant color LED stuff
 #define BREATHE_DUR   10000
 #define BREATHE_MIN      20
 #define BREATHE_MAX      40
@@ -7,6 +8,14 @@
 int breath_amp = (BREATHE_MAX - BREATHE_MIN) / 2;
 double breath_per = 2 * PI / BREATHE_DUR;
 int breath_off = BREATHE_MIN + breath_amp;
+
+// Lava Lamp stuff
+#define LL_COLOR_ON_R            0
+#define LL_COLOR_ON_G          255
+#define LL_COLOR_ON_B            0
+#define LL_COLOR_CHANGE_R        0
+#define LL_COLOR_CHANGE_G        6
+#define LL_COLOR_CHANGE_B        0
 
 
 // Used for maintaining Animation in display
@@ -98,8 +107,10 @@ void Animations::set_RandomColors() {
 void Animations::set_LavaLamp() {
   if (ani_style != 7) {
     ani_style = 6;
-    ani_refresh = 3000;
+    ani_refresh = 50;
+    ani_dir = 1;
     ll_on = 0;
+    FastLED.setBrightness(192);
     LL_reset();
     LavaLamp();
   }
@@ -184,7 +195,7 @@ void Animations::ElevatingColors() {
 }
 
 void Animations::FadingColors() {
-
+  
 }
 
 void Animations::RandomColors() {
@@ -201,133 +212,81 @@ void Animations::RandomColors() {
   FastLED.show();
 }
 
-
 void Animations::LavaLamp() {
-  // Check that there are LED's on
-  if (ll_on == 0) {
-    ll_indexes[0][0] = 4;
-    ll_indexes[0][1] = random(0,4);
+  // Start 1 pixel if necessary
+  if (ll_on < 1) {
     ll_on = 1;
-    Serial.println("turned on LED");
-  }
-  LL_show();
-
-  // Move the LEDs that are on
-  LL_move();
-  LL_show();
-
-  // Add LED?
-  if (ll_on < 3) {
-    LL_add();
-    LL_show();
+    ll_cur_idex[0] = 4;
+    ll_cur_idex[1] = random(0,4);
+    ll_cur = LED_location[ll_cur_idex[0]][ll_cur_idex[1]];
+    //Serial.print("Started new LED: "); Serial.println(ll_cur);
   }
 
-  // Set LEDs
-  LL_set();
-}
+  // Change colors
+  for (int iset=0; iset < NUM_LEDS; iset++) {
+    if (iset == ll_cur) {
+      // Add color to pixel
+      leds[iset] += CRGB(LL_COLOR_CHANGE_R,LL_COLOR_CHANGE_G,LL_COLOR_CHANGE_B);
+      //Serial.print("Current RGB("); Serial.print(ll_cur); Serial.print("): "); Serial.print(leds[iset].r); Serial.print(","); Serial.print(leds[iset].g); Serial.print(","); Serial.println(leds[iset].b);
 
-void Animations::LL_reset() {
-  for (int irow = 0; irow < 3; irow++) {
-    for (int icol = 0; icol < 2; icol++) {
-      ll_locations[irow] = -1;
+    } else if (iset == ll_old && ll_old != -1) {
+      // remove color from old pixels
+      if (leds[ll_cur].r - LL_COLOR_ON_R * .80 >= 0.0 && leds[ll_cur].g - LL_COLOR_ON_G * .80 >= 0.0 && leds[ll_cur].b - LL_COLOR_ON_B * .80 >= 0.0) {
+        leds[iset] -= CRGB(LL_COLOR_CHANGE_R * 1.5,LL_COLOR_CHANGE_G * 1.5,LL_COLOR_CHANGE_B * 1.5);
+      }
+      //Serial.print("Old     RGB("); Serial.print(ll_old); Serial.print("): "); Serial.print(leds[iset].r); Serial.print(","); Serial.print(leds[iset].g); Serial.print(","); Serial.println(leds[iset].b);
+
+    } else {
+      // set all other pixels
+      leds[iset] = CRGB(0,0,15);
     }
   }
+  FastLED.show();
+
+  // Move the LED (if it hit top or bottom)
+  if (ll_old == -1) {
+    if (leds[ll_cur].r >= LL_COLOR_ON_R && leds[ll_cur].g >= LL_COLOR_ON_G && leds[ll_cur].b >= LL_COLOR_ON_B) {
+      //Serial.print("moving led (1)");
+      LL_move();
+    }
+  } else {
+    if (leds[ll_old].r <= 0 && leds[ll_old].g <= 0 && leds[ll_old].b <= 0) {
+      //Serial.print("moving led (2)");
+      LL_move();
+    }
+  }
+
+  //Serial.println();
 }
 
 void Animations::LL_move() {
-  Serial.println("Moving LEDs");
-  Serial.print("ll_on: "); Serial.println(ll_on);
-  for (int idex = 0; idex < ll_on; idex++) {
-    ll_indexes[idex][0]--;
-    if (ll_indexes[idex][0] < 0) {
-      Serial.print("LED Height: "); Serial.println(ll_indexes[idex][0]);
-      // move the remaining ll_indexes up
-      for (int idex_remove = idex + 1; idex_remove < ll_on; idex_remove++ ) {
-        ll_indexes[idex_remove-1][0] = ll_indexes[idex_remove][0];
-        ll_indexes[idex_remove-1][1] = ll_indexes[idex_remove][1];
-      }
-      ll_on--;
-      Serial.println("Removed LED");
-      continue;
+  leds[ll_old] = CRGB(0,0,20);
+  if (ll_cur_idex[0] == 0) {
+      // if led is on the top row, move down
+      ani_dir = 1;
+    } else if (ll_cur_idex[0] == 4) {
+      // if led is on the bottom row, move up
+      ani_dir = -1;
     }
-    ll_indexes[idex][1] = ll_indexes[idex][1] + random(-1,2);
-    // validate the rotation of the LED's
-    if (ll_indexes[idex][1] >= LED_ROT) {
-      ll_indexes[idex][1] = 0;
-    } else if (ll_indexes[idex][1] < 0) {
-      ll_indexes[idex][1] = 4;
+    ll_old_idex[0] = ll_cur_idex[0];
+    ll_old_idex[1] = ll_cur_idex[1];
+    ll_old = ll_cur;
+    ll_cur_idex[0] += ani_dir;
+    ll_cur_idex[1] += random(-1,2);
+    if (ll_cur_idex[1] > 3) {
+      ll_cur_idex[1] = 0;
+    } else if (ll_cur_idex[1] < 0) {
+      ll_cur_idex[1] = 3;
     }
-  }
+    ll_cur = LED_location[ll_cur_idex[0]][ll_cur_idex[1]];
+    leds[ll_cur] = CRGB::Black;
+    
+    //Serial.print("Moved LED");
 }
 
-void Animations::LL_add() {
-  if (round((double) random(0,101)/100.0) == 1) {
-    ll_on++;
-    ll_indexes[ll_on][0] = 4;
-    // Check to see if there is a pixel in the bottom 2 rows, if so, choose a column away from the existing's possible movement.
-    int ll_check = true;
-    int ll_new = 10;
-    for (int idex = 0; idex < ll_on; idex++) {
-      int cur_idex = ll_indexes[idex][1];
-      if(cur_idex > 2) {
-        ll_check = false;
-        // take care of +0
-        ll_new = ll_new - (cur_idex + 1);
-        // Take care of +1
-        if (cur_idex + 1 >= LED_ROT) {
-          ll_new = ll_new - 1;
-        } else {
-          ll_new = ll_new - (cur_idex + 1);
-        }
-        // Take care of -1
-        if (cur_idex - 1 < 0) {
-          ll_new = ll_new - 4;
-        } else {
-          ll_new = ll_new - (cur_idex - 1);
-        }
-      }
-    }
-    if (ll_check) {
-      ll_indexes[ll_on][1] = random(0,4);
-    } else if (ll_new > 0) {
-      ll_indexes[ll_on][1] = ll_new;
-    }
-  }
-}
-
-void Animations::LL_set() {
-  Serial.println("Setting LEDs");
-  // Set ll_locations for all "on"
-  for (int idex = 0; idex < ll_on; idex++) {
-    ll_locations[idex] = LED_location[ll_indexes[idex][0]][ll_indexes[idex][1]];
-  }
-
-  for (int set_row = 0; set_row < LED_HGT; set_row++) {
-    for (int set_col = 0; set_col < LED_ROT; set_col++) {
-      bool cur_found = false;
-      for (int finder = 0; finder < ll_on; finder++) {
-        if (ll_locations[finder] == LED_location[set_row][set_col]) {
-          cur_found = true;
-        }
-      }
-      if (cur_found) {
-        Serial.print(LED_location[set_row][set_col]); Serial.print(", "); Serial.print("Blue");
-        leds[LED_location[set_row][set_col]] = CRGB::Blue;
-      } else {
-        leds[LED_location[set_row][set_col]] = CRGB::Black;
-        Serial.print(LED_location[set_row][set_col]); Serial.print(", "); Serial.print("Gray");
-      }
-      Serial.print(" ");
-    }
-    Serial.println();
-  }
-  FastLED.show();
-}
-
-void Animations::LL_show() {
-  Serial.print("LEDs on: "); Serial.println(ll_on);
-  for (int idex = 0; idex < 3; idex++) {
-    Serial.print("ll_indexes (row, col): "); Serial.print(ll_indexes[idex][0]); Serial.print(", ");Serial.println(ll_indexes[idex][1]);
+void Animations::LL_reset() {
+  for (int i=0; i < NUM_LEDS; i++) {
+    leds[i] = CRGB::Black;
   }
 }
 

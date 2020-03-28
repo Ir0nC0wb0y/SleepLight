@@ -86,8 +86,21 @@ void handle_state() {
       break;
     case 2: // fun
       Serial.println("setting fun mode");
-      //ani.set_RandomColors();
-      ani.set_LavaLamp();
+      int select_fun = random(0,2);
+      switch (select_fun) {
+        case 0:
+          Serial.println("Using Random Color");
+          ani.set_RandomColors();
+          break;
+        case 1:
+          Serial.println("Using LavaLamp");
+          ani.set_LavaLamp();
+          break;
+        case 2:
+          Serial.println("Using Elevating Color");
+          ani.set_ElevatingColors();
+          break;
+      }
     break;
   }
 }
@@ -105,13 +118,13 @@ void handle_sched() {
 
   // Sorted by my own schedule, otherwise dealing with a race condition
   if (time_hr >= sched_wake[weekday][0] && time_mn >= sched_wake[weekday][1] && time_sc >= sched_wake[weekday][2]) {
-    sched_state = 1;
+    sched_state = 1; //wake mode
   }
   if (time_hr >= sched_fun[weekday][0] && time_mn >= sched_fun[weekday][1] && time_sc >= sched_fun[weekday][2]) {
-    sched_state = 2;
+    sched_state = 2; //fun mode
   }
   if (time_hr >= sched_sleep[weekday][0] && time_mn >= sched_sleep[weekday][1] && time_sc >= sched_sleep[weekday][2]) {
-    sched_state = 0;
+    sched_state = 0; //Sleep mode
   }
 
   if (state_prior != sched_state) {
